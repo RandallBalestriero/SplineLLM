@@ -117,6 +117,17 @@ def decision_tree(X_train, y_train, X_test, y_test, X_test_prompt, data_name):
 
 
 
+def get_inference_time(data_path):
+    data = pd.read_csv(data_path)
+    concatenated_dict = {}
+    keys = eval(data['inference_time'][0])
+    concatenated_dict = {key: [] for key in keys}
+    for idx, row in enumerate(data['inference_time']):
+        if idx == 0:
+            continue
+        for key in keys:
+            concatenated_dict[key].extend(eval(row)[key])    
+    return concatenated_dict
 
 if __name__ == "__main__":
 
