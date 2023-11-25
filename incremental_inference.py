@@ -38,7 +38,7 @@ def forward(model, tokenizer, df_data, data_path_out):
                 data_idx.append(idx)
                 
     output_path =os.path.join(data_path_out, 'incemental_stats.csv')
-    df = pd.DataFrame({'sample_id': idx, 'tokens': tokens_sequence, 'stats': polytope_sequence})
+    df = pd.DataFrame({'sample_id': data_idx, 'tokens': tokens_sequence, 'stats': polytope_sequence})
     df.to_csv(output_path, index=False)
     
     
