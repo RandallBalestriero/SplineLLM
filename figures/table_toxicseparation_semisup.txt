@@ -1,0 +1,151 @@
+60.0\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 62578 & 654 & 63232 \\
+unlabeled train set & 93867 & 982 & 94849 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\67.874\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 50258 & 526 & 50784 \\
+unlabeled train set & 106187 & 1110 & 107297 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\74.625\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 39697 & 415 & 40112 \\
+unlabeled train set & 116748 & 1221 & 117969 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\80.34\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 30756 & 322 & 31078 \\
+unlabeled train set & 125689 & 1314 & 127003 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\85.105\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 23302 & 244 & 23546 \\
+unlabeled train set & 133143 & 1392 & 134535 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\89.006\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 17199 & 180 & 17379 \\
+unlabeled train set & 139246 & 1456 & 140702 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\92.13\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 12312 & 129 & 12441 \\
+unlabeled train set & 144133 & 1507 & 145640 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\94.562\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 8506 & 89 & 8595 \\
+unlabeled train set & 147939 & 1547 & 149486 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\96.391\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 5646 & 59 & 5705 \\
+unlabeled train set & 150799 & 1577 & 152376 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\97.701\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 3596 & 38 & 3634 \\
+unlabeled train set & 152849 & 1598 & 154447 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\98.579\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 2223 & 23 & 2246 \\
+unlabeled train set & 154222 & 1613 & 155835 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\99.111\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 1389 & 15 & 1404 \\
+unlabeled train set & 155056 & 1621 & 156677 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\99.385\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 962 & 10 & 972 \\
+unlabeled train set & 155483 & 1626 & 157109 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\99.486\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 805 & 8 & 813 \\
+unlabeled train set & 155640 & 1628 & 157268 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\99.5\%
+\begin{tabular}{lrrr}
+\toprule
+ & clean & toxic & Total \\
+\midrule
+labeled train set & 782 & 8 & 790 \\
+unlabeled train set & 155663 & 1628 & 157291 \\
+test set & 67049 & 701 & 67750 \\
+\bottomrule
+\end{tabular}
+\\

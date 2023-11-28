@@ -27,10 +27,16 @@ from sklearn.metrics import (
     adjusted_rand_score,
     normalized_mutual_info_score,
     roc_auc_score,
+    make_scorer,
 )
+from sklearn.preprocessing import StandardScaler
 from sklearn.semi_supervised import SelfTrainingClassifier
 import seaborn
 from matplotlib import rc
+from pathlib import Path
+from matplotlib.ticker import FormatStrFormatter
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.model_selection import GridSearchCV
 
 plt.style.use("ggplot")
 
@@ -83,7 +89,7 @@ def fit_sup(data, labels, method, by=None, n_folds=5, pct_unlabeled=0):
         index = [f"feature {1+i}" for i in range(data.shape[2])]
     scores = np.zeros((len(chunks), len(names)))
     scores = pd.DataFrame(scores, columns=names, index=index)
-    scaler = sklearn.preprocessing.StandardScaler()
+    scaler = StandardScaler()
 
     columns = list(names) + ["Total"]
     if pct_unlabeled:
@@ -115,8 +121,13 @@ def fit_sup(data, labels, method, by=None, n_folds=5, pct_unlabeled=0):
                 yhat = method.fit(X_train, cp_y_train).predict_proba(X_test)
             else:
                 yhat = method.fit(X_train, y_train).predict_proba(X_test)
+            if len(names) == 2:
+                yhat = yhat[:, 1]
             scores.iloc[c, :] += roc_auc_score(
-                y_test, yhat, multi_class="ovr", average=None
+                y_test,
+                yhat,
+                multi_class="ovr" if len(names) > 2 else "raise",
+                average=None,
             )
     for k in range(len(names)):
         sizes.iloc[-1, k] = np.count_nonzero(y_test == k)
@@ -129,101 +140,62 @@ def fit_sup(data, labels, method, by=None, n_folds=5, pct_unlabeled=0):
     return scores * 100 / n_folds, sizes.astype("int")
 
 
-def unsupervised_embedding(data, labels, n_components=2, plot=False):
-    colors = plt.cm.tab10.colors
+def unsupervised_embedding(X, y, exp_name):
+    cmap = plt.cm.tab10.colors
 
-    print(data.shape, labels.shape)
-    pbar = tqdm(range(3), total=3)
-    X = data.reshape((len(data), -1))
-    # X = sklearn.preprocessing.StandardScaler().fit_transform(X)
+    pbar = tqdm(range(2), total=2)
 
     pbar.set_description(f"Computing PCA")
-    X_pca = PCA(n_components=n_components, random_state=0).fit_transform(X)
+    X_pca = PCA(n_components=2, random_state=0).fit_transform(X)
     pbar.update(1)
     pbar.set_description(f"Computing TSNE")
-    X_tsne = TSNE(n_components=n_components, random_state=0).fit_transform(X)
+    X_tsne = TSNE(n_components=2, random_state=0).fit_transform(X)
     pbar.update(1)
-    pbar.set_description(f"Computing FastICA")
-    X_se = TSNE(
-        n_components=n_components, random_state=0, perplexity=100
-    ).fit_transform(X)
     pbar.close()
 
-    if plot:
-        colors = LabelEncoder().fit_transform(labels)
-        fig, axs = plt.subplots(1, 3, figsize=(12, 12))
-        for ax, x, name in zip(
-            axs, [X_pca, X_tsne, X_se], ["PCA", "T-SNE", "Spectral Embedding"]
-        ):
-            ax.scatter(x[:, 0], x[:, 1], c=colors)
-            ax.set_title(name)
-        plt.show()
-    # plt.savefig("toxic_pile_pca.png")
+    encoder = LabelEncoder()
+    colors = encoder.fit_transform(y)
+    for x, name in zip([X_pca, X_tsne], ["PCA", "T-SNE"]):
+        fig, ax = plt.subplots(figsize=(7, 7))
+        for k in range(len(encoder.classes_)):
+            ax.scatter(
+                x[colors == k, 0],
+                x[colors == k, 1],
+                color=cmap[k],
+                edgecolor="gray",
+                linewidth=1,
+                label=encoder.classes_[k],
+                alpha=0.2,
+            )
+        leg = plt.legend(ncol=2)
+        for lh in leg.legendHandles:
+            lh.set_alpha(1)
+        ax.set_axis_off()
+        plt.tight_layout()
+        plt.savefig(f"./figures/{exp_name}_{name}.png")
+        plt.close()
 
 
-def load_data(datasets: Dict[str, str]) -> Tuple[np.ndarray, np.ndarray, List[str]]:
-    """load the statistics and prompts saved using another script.
-
-    Args:
-        datasets (Dict[str, str]): the mapping from dataset name (or subset) to statistic file
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray, List[str]]: the loaded data in a numpy format
-    """
-
-    data = []
-    labels = []
-    prompts = []
-    pbar = tqdm(datasets.items(), total=len(datasets))
-    for name, path in pbar:
-        pbar.set_description(f"Loading {name} from {path}")
-        raw_data = pd.read_csv(path)
-        labels.append(np.asarray([name] * len(raw_data)))
-        for index, row in tqdm(raw_data.iterrows(), total=len(raw_data), leave=False):
-            stats = np.array(ast.literal_eval(row["stats"]))
-            data.append(stats)
-            prompts.append(row["prompt"])
-    data = np.stack(data)
-    labels = np.concatenate(labels)
-    return data, labels, prompts
-
-
-if __name__ == "__main__":
-    rc("axes", linewidth=2)
-    rc("font", weight="bold")
-    rc("font", size=16)
-    rc("axes", labelsize=18)
+def run_sup_semisup_experiments(X, y, exp_name, n_folds: int = 5, pcts=None):
+    if pcts is not None:
+        pcts = np.array(pcts)
+    else:
+        pcts = []
     cmap = sns.diverging_palette(220, 20, as_cmap=True)
-
-    datasets = {
-        "toxic_pile": "../Downloads/polytope/toxic_pile/statistics.csv",
-        "hotel": "../Downloads/polytope/hotel/statistics.csv",
-        "FreeLaw": "../Downloads/polytope/FreeLaw/statistics.csv",
-        "PubMed": "../Downloads/polytope/PubMed Abstracts/statistics.csv",
-        "DM Math.": "../Downloads/polytope/DM Mathematics/statistics.csv",
-        "USPTO": "../Downloads/polytope/USPTO Backgrounds/statistics.csv",
-        "Github": "../Downloads/polytope/Github/statistics.csv",
-    }
-    n_folds = 5
-
-    features, labels, prompts = load_data(datasets)
-
-    # unsupervised_embedding(statistics, labels, plot=True)
-
+    print(f"Running sup/semisup experiment with X:{X.shape}, y:{y.shape}, {n_folds=}")
     """
     We define some models that will be used for the supervised and semi-supervised experiments
     """
-    RF = RandomForestClassifier(class_weight="balanced", n_jobs=-1, min_samples_leaf=3)
-    KNN = KNeighborsClassifier(
-        n_jobs=-1, n_neighbors=32, weights="distance", leaf_size=5
+    RF = RandomForestClassifier(
+        class_weight="balanced", n_jobs=-1, min_samples_leaf=100
     )
     GBDT = GradientBoostingClassifier(n_estimators=30)
-    DT1 = DecisionTreeClassifier(
-        class_weight="balanced", min_samples_leaf=3, max_depth=4
-    )
-    DT2 = DecisionTreeClassifier(
-        class_weight="balanced", min_samples_leaf=3, max_depth=20
-    )
+    # DT1 = DecisionTreeClassifier(
+    #     class_weight="balanced", min_samples_leaf=3, max_depth=4
+    # )
+    # DT2 = DecisionTreeClassifier(
+    #     class_weight="balanced", min_samples_leaf=3, max_depth=20
+    # )
     LR = LogisticRegression(class_weight="balanced", n_jobs=-1, max_iter=400)
 
     """
@@ -231,35 +203,48 @@ if __name__ == "__main__":
     """
     kwargs = dict(annot=True, fmt=".1f")
     kwargs["annot_kws"] = {"fontsize": 11, "color": "k"}
-    all_scores = []
     fig, ax = plt.subplots(figsize=(9, 8))
-    pcts = (1 - np.linspace(0, 1, 15)[::-1] ** 4) * 0.395 + 0.6
-    for pct in tqdm(pcts, desc=f"Semisup {type(RF).__name__}"):
-        # set up the semisup learning method
-        k_best = int(len(labels) * 0.7 * pct * 0.1)
-        m = SelfTrainingClassifier(RF, criterion="k_best", k_best=k_best)
-        # fit, get score and number of samples per dataset
-        sc, sz = fit_sup(features, labels, method=m, pct_unlabeled=pct, n_folds=n_folds)
-        print(sz)
-        all_scores.append(sc)
-    scores = pd.concat(all_scores)
-    scores.index = np.round(100 - pcts * 100, 2)
-    seaborn.heatmap(scores, ax=ax, cmap=cmap, **kwargs)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=40)
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
-    ax.set_ylabel("% of training set being labeled", weight="bold")
-    plt.subplots_adjust(0.14, 0.15, 1, 0.99)
-    plt.savefig("./figures/semisup.png")
-    plt.close()
-
-    """
-    Supervised experiments that is done on all the defined models
-    """
-    kwargs = dict(annot=True, fmt=".1f")
-    kwargs["annot_kws"] = {"fontsize": 11, "color": "k"}
-    all_scores = []
-    for m in [RF, KNN, DT1, DT2, LR]:
+    all_semisup_scores = []
+    all_sup_scores = []
+    for m in [RF, LR]:
         name = type(m).__name__
+
+        if Path(f"./figures/table_{exp_name}_semisup_{name}.txt").is_file():
+            Path(f"./figures/table_{exp_name}_semisup_{name}.txt").unlink()
+        if Path(f"./figures/table_{exp_name}_semisup_acc_{name}.txt").is_file():
+            Path(f"./figures/table_{exp_name}_semisup_acc_{name}.txt").unlink()
+        for pct in tqdm(pcts, desc=f"Semisup {type(m).__name__}"):
+            # set up the semisup learning method
+            k_best = int(len(y) * 0.7 * pct * 0.1)
+            m = SelfTrainingClassifier(m, criterion="k_best", k_best=k_best)
+            # fit, get score and number of samples per dataset
+            sc, sz = fit_sup(X, y, method=m, pct_unlabeled=pct, n_folds=n_folds)
+            with open(f"./figures/table_{exp_name}_semisup_{name}.txt", "a+") as f:
+                print(sz)
+                f.write(f"{np.round(100*pct,3)}\%\n")
+                f.write(str(sz.to_latex(float_format="{:.2f}".format)))
+                f.write(r"\\")
+            all_semisup_scores.append(sc)
+            all_semisup_scores[-1].index = [f"{name} ({pct}%)"]
+        scores = pd.concat(all_semisup_scores)
+        with open(f"./figures/table_{exp_name}_semisup_acc_{name}.txt", "a+") as f:
+            f.write(str(scores.to_latex(float_format="{:.2f}".format)))
+        seaborn.heatmap(scores, ax=ax, cmap=cmap, **kwargs)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=40)
+        ax.set_yticklabels(
+            [f"{v:.2f}" for v in np.round(100 - pcts * 100, 2)], rotation=0
+        )
+        ax.set_ylabel("% of training set being labeled", weight="bold")
+        plt.subplots_adjust(0.14, 0.15, 1, 0.99)
+        plt.savefig(f"./figures/{exp_name}_semisup_{name}.png")
+        plt.close()
+
+        """
+        Supervised experiments that is done on all the defined models
+        """
+        kwargs = dict(annot=True, fmt=".1f")
+        kwargs["annot_kws"] = {"fontsize": 11, "color": "k"}
+
         if "DecisionTreeClassifier" == name:
             name += f"(depth={m.max_depth})"
         name = name.replace("Classifier", "")
@@ -267,16 +252,215 @@ if __name__ == "__main__":
         fig, axs = plt.subplots(1, 2, figsize=(16, 8))
         for ax, by in zip(axs, ["layer", "feature"]):
             print(f"\t\t-Group: {by}")
-            scores, _ = fit_sup(features, labels, method=m, by=by, n_folds=n_folds)
+            scores, _ = fit_sup(X, y, method=m, by=by, n_folds=n_folds)
             seaborn.heatmap(scores, ax=ax, cmap=cmap, **kwargs)
             ax.set_xticklabels(ax.get_xticklabels(), rotation=40)
         plt.subplots_adjust(0.08, 0.15, 1, 0.995)
-        plt.savefig(f"./figures/classification_{name}.png")
+        plt.savefig(f"./figures/{exp_name}_classification_{name}.png")
         plt.close()
         print(f"\t\t-Group: All")
-        all_scores.append(fit_sup(features, labels, method=m)[0])
-        all_scores[-1].index = [name]
-    print(pd.concat(all_scores).to_latex(float_format="{:.2f}".format))
+        all_sup_scores.append(fit_sup(X, y, method=m)[0])
+        all_sup_scores[-1].index = [name]
+    print(pd.concat(all_semisup_scores).to_latex(float_format="{:.2f}".format))
+    print(pd.concat(all_sup_scores).to_latex(float_format="{:.2f}".format))
+
+
+def load_data(path: str, jigsaw_subset: str = "clean") -> Tuple[np.ndarray, List[str]]:
+    """load the statistics and prompts saved using another script.
+
+    Args:
+        datasets (str): the path to .csv
+
+    Returns:
+        Tuple[np.ndarray, List[str]]: the loaded data in a numpy format
+    """
+
+    raw_data = pd.read_csv(path)
+    if "jigsaw" in str(path):
+        y = raw_data[
+            ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+        ].values
+        if "clean" in jigsaw_subset:
+            clean = ~y.any(1)
+            valid = np.flatnonzero(clean)
+            if jigsaw_subset == "clean_small":
+                valid = valid[np.random.permutation(np.count_nonzero(clean))[:10000]]
+        elif jigsaw_subset == "toxic":
+            toxic = y.any(1)
+            valid = np.flatnonzero(toxic)
+        elif jigsaw_subset == "very_toxic":
+            toxic = y[:, 1]
+            valid = np.flatnonzero(toxic)
+        raw_data = raw_data.loc[valid]
+    prompts = raw_data["prompt"].values
+    stats = raw_data["stats"].apply(ast.literal_eval)
+    stats = np.stack(stats.values)
+    return stats, prompts
+
+
+def load_jigsaw(path: str) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    """load the X, y and prompts for jigsaw
+
+    Args:
+        datasets (str): the path to .csv file
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray, List[str]]: the loaded data in a numpy format
+    """
+    raw_data = pd.read_csv(path)
+    y = raw_data[
+        ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+    ].values
+    prompts = raw_data["prompt"].values
+    X = np.stack(raw_data["stats"].apply(ast.literal_eval).values)
+    return X, y, prompts
+
+
+if __name__ == "__main__":
+    rc("axes", linewidth=2)
+    rc("font", weight="bold")
+    rc("font", size=16)
+    rc("axes", labelsize=18)
+
+    # X, y, prompts = load_jigsaw("../Downloads/polytope_all/full_jigsaw/statistics.csv")
+    # X = X.reshape((len(X), -1))
+
+    # def scoring(y_test, yhat):
+    #     return roc_auc_score(y_test, yhat[:, 1])
+
+    # scorer = make_scorer(scoring, needs_proba=True)
+    # df = pd.DataFrame(
+    #     columns=[
+    #         "toxic",
+    #         "severe_toxic",
+    #         "obscene",
+    #         "threat",
+    #         "insult",
+    #         "identity_hate",
+    #     ]
+    # )
+    # scaler = StandardScaler()
+    # (
+    #     X_train,
+    #     X_test,
+    #     y_train,
+    #     y_test,
+    #     prompts_train,
+    #     prompts_test,
+    # ) = train_test_split(X, y, prompts, test_size=0.5, random_state=0)
+    # X_train = scaler.fit_transform(X_train)
+    # X_test = scaler.transform(X_test)
+    # print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+    # for module, params in zip(
+    #     [
+    #         RandomForestClassifier(n_jobs=-1),
+    #         LogisticRegression(
+    #             class_weight="balanced",
+    #             max_iter=600,
+    #             penalty="elasticnet",
+    #             solver="saga",
+    #             n_jobs=-1,
+    #         ),
+    #         KNeighborsClassifier(n_jobs=-1, weights="distance"),
+    #     ],
+    #     [
+    #         {
+    #             "class_weight": ("balanced", "balanced_subsample"),
+    #             "min_samples_leaf": (20, 200, 1000),
+    #             "max_depth": (4, None),
+    #         },
+    #         {"C": (0.001, 0.1, 1, 10, 1000), "l1_ratio": (0.1, 0.5, 0.9)},
+    #         {"n_neighbors": (200, 2000), "leaf_size": (50)},
+    #     ],
+    # ):
+    #     clf = GridSearchCV(module, params, verbose=1, cv=2, n_jobs=-1)
+    #     clf = MultiOutputClassifier(clf)
+
+    #     yhat = clf.fit(X_train, y_train).predict_proba(X_test)
+    #     for i in np.flatnonzero((yhat[0].argmax(1) == 1) & (y_test[:, 0] == 0))[:100]:
+    #         print("Predicted toxic but labelled not toxic:", prompts_test[i])
+    #     # for i in np.flatnonzero((yhat[0].argmax(1) == 0) & (y_test[:, 0] == 1))[:30]:
+    #     #     print("Predicted not toxic but labelled toxic:", prompts_test[i])
+
+    #     aucs = []
+    #     for p in range(len(yhat)):
+    #         aucs.append(roc_auc_score(y_test[:, p], yhat[p][:, 1]))
+    #     df.loc[type(module).__name__] = aucs
+    #     print(df.to_latex(float_format="{:.2f}".format))
+    #     print(df.mean(1))
+
+    # datasets = {
+    #     "FreeLaw": "../Downloads/polytope_all/FreeLaw/statistics.csv",
+    #     "PubMed": "../Downloads/polytope_all/PubMed Abstracts/statistics.csv",
+    #     "DM Math.": "../Downloads/polytope_all/DM Mathematics/statistics.csv",
+    #     "USPTO": "../Downloads/polytope_all/USPTO Backgrounds/statistics.csv",
+    #     "Github": "../Downloads/polytope_all/Github/statistics.csv",
+    #     "dollyQA": "../Downloads/polytope_all/dollyQA/statistics.csv",
+    #     "jigsaw_clean": "../Downloads/polytope_all/full_jigsaw/statistics.csv",
+    # }
+    # X = []
+    # y = []
+    # prompts = []
+    # pbar = tqdm(datasets.items(), total=len(datasets))
+    # for name, path in pbar:
+    #     pbar.set_description(f"Loading {name} from {path}")
+    #     X_, prompts_ = load_data(path, jigsaw_subset="clean_small")
+    #     print(X_.shape)
+    #     y.append(np.asarray([name] * len(X_)))
+    #     prompts.extend(prompts_)
+    #     X.append(X_)
+    # X = np.concatenate(X)
+    # y = np.concatenate(y)
+
+    # run_sup_semisup_experiments(X, y, exp_name="nontoxicdatasets", n_folds=1, pcts=[0.5, 0.6,0.7,0.8,0.9,0.95,0.99])
+    # unsupervised_embedding(np.reshape(X, (len(X), -1)), y, exp_name="nontoxicdatasets")
+
+    datasets = {
+        "toxic_pile": "../Downloads/polytope_all/toxic_pile/statistics.csv",
+        "toxigen": "../Downloads/polytope_all/toxicity/statistics.csv",
+        "FreeLaw": "../Downloads/polytope_all/FreeLaw/statistics.csv",
+        "PubMed": "../Downloads/polytope_all/PubMed Abstracts/statistics.csv",
+        "DM Math.": "../Downloads/polytope_all/DM Mathematics/statistics.csv",
+        "USPTO": "../Downloads/polytope_all/USPTO Backgrounds/statistics.csv",
+        "dollyQA": "../Downloads/polytope_all/dollyQA/statistics.csv",
+        "Github": "../Downloads/polytope_all/Github/statistics.csv",
+        "jigsaw_clean": "../Downloads/polytope_all/full_jigsaw/statistics.csv",
+        "jigsaw_very_toxic": "../Downloads/polytope_all/full_jigsaw/statistics.csv",
+    }
+    X = []
+    y = []
+    prompts = []
+    pbar = tqdm(datasets.items(), total=len(datasets))
+    for name, path in pbar:
+        pbar.set_description(f"Loading {name} from {path}")
+        if "jigsaw_clean" == name:
+            X_, prompts_ = load_data(path, jigsaw_subset="clean")
+        elif "jigsaw_toxic" == name:
+            X_, prompts_ = load_data(path, jigsaw_subset="toxic")
+        elif "jigsaw_very_toxic" == name:
+            X_, prompts_ = load_data(path, jigsaw_subset="very_toxic")
+        else:
+            X_, prompts_ = load_data(path)
+        y.append(
+            np.asarray(
+                [
+                    "toxic"
+                    if name
+                    in ["toxigen", "toxic_pile", "jigsaw_toxic", "jigsaw_very_toxic"]
+                    else "clean"
+                ]
+                * len(X_)
+            )
+        )
+        prompts.extend(prompts_)
+        X.append(X_)
+    X = np.concatenate(X)
+    y = np.concatenate(y)
+
+    run_sup_semisup_experiments(
+        X, y, exp_name="toxicseparation", n_folds=1, pcts=[0.8, 0.9, 0.95]
+    )
+    unsupervised_embedding(np.reshape(X, (len(X), -1)), y, exp_name="toxicseparation")
 
     # Clustering results
     # fig, axs = plt.subplots(1, 2)
