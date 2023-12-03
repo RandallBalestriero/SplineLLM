@@ -1,0 +1,20 @@
+\begin{tabular}{lrrrrrrr}
+\toprule
+{} &  DM Math. &  FreeLaw &  Github &  PubMed &  USPTO &  dollyQA &  jigsaw\_clean \\
+\midrule
+RandomForestClassifier (50.0\textbackslash \%) &     99.99 &    99.85 &   98.83 &   99.69 &  98.48 &    98.18 &         97.82 \\
+RandomForestClassifier (40.0\textbackslash \%) &     99.99 &    99.84 &   98.56 &   99.62 &  98.16 &    98.00 &         97.53 \\
+RandomForestClassifier (30.0\textbackslash \%) &     99.99 &    99.81 &   98.28 &   99.57 &  97.52 &    97.82 &         97.08 \\
+RandomForestClassifier (20.0\textbackslash \%) &     99.98 &    99.72 &   97.79 &   99.44 &  96.39 &    97.19 &         95.88 \\
+RandomForestClassifier (10.0\textbackslash \%) &     99.98 &    99.34 &   95.47 &   99.33 &  94.94 &    96.02 &         92.38 \\
+RandomForestClassifier (5.0\textbackslash \%)  &     99.98 &    99.09 &   92.95 &   99.28 &  94.49 &    95.00 &         89.83 \\
+RandomForestClassifier (1.0\textbackslash \%)  &     99.78 &    98.59 &   96.54 &   99.50 &  95.92 &    94.00 &         90.92 \\
+LogisticRegression (50.0\textbackslash \%)     &    100.00 &    99.88 &   99.23 &   99.91 &  99.89 &    99.41 &         99.31 \\
+LogisticRegression (40.0\textbackslash \%)     &    100.00 &    99.82 &   99.15 &   99.90 &  99.84 &    99.41 &         99.30 \\
+LogisticRegression (30.0\textbackslash \%)     &    100.00 &    99.84 &   99.06 &   99.89 &  99.83 &    99.37 &         99.28 \\
+LogisticRegression (20.0\textbackslash \%)     &    100.00 &    99.92 &   98.93 &   99.89 &  99.80 &    99.33 &         99.23 \\
+LogisticRegression (10.0\textbackslash \%)     &     99.99 &    99.83 &   98.65 &   99.86 &  99.72 &    99.22 &         99.09 \\
+LogisticRegression (5.0\textbackslash \%)      &     99.99 &    99.81 &   98.41 &   99.85 &  99.59 &    99.03 &         98.84 \\
+LogisticRegression (1.0\textbackslash \%)      &     99.71 &    99.47 &   97.95 &   99.77 &  98.58 &    97.48 &         96.85 \\
+\bottomrule
+\end{tabular}

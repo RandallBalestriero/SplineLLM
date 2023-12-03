@@ -1,0 +1,24 @@
+\begin{tabular}{lrrr}
+\toprule
+{} &  clean &  toxic &  Total \\
+\midrule
+labeled train set (20.0\textbackslash \%)   &   3138 &   4220 &   7358 \\
+unlabeled train set (20.0\textbackslash \%) &  12551 &  16881 &  29432 \\
+test set (20.0\textbackslash \%)            &   6724 &   9044 &  15768 \\
+labeled train set (10.0\textbackslash \%)   &   1569 &   2110 &   3679 \\
+unlabeled train set (10.0\textbackslash \%) &  14120 &  18991 &  33111 \\
+test set (10.0\textbackslash \%)            &   6724 &   9044 &  15768 \\
+labeled train set (5.0\textbackslash \%)    &    784 &   1055 &   1839 \\
+unlabeled train set (5.0\textbackslash \%)  &  14905 &  20046 &  34951 \\
+test set (5.0\textbackslash \%)             &   6724 &   9044 &  15768 \\
+labeled train set (20.0\textbackslash \%)   &   3138 &   4220 &   7358 \\
+unlabeled train set (20.0\textbackslash \%) &  12551 &  16881 &  29432 \\
+test set (20.0\textbackslash \%)            &   6724 &   9044 &  15768 \\
+labeled train set (10.0\textbackslash \%)   &   1569 &   2110 &   3679 \\
+unlabeled train set (10.0\textbackslash \%) &  14120 &  18991 &  33111 \\
+test set (10.0\textbackslash \%)            &   6724 &   9044 &  15768 \\
+labeled train set (5.0\textbackslash \%)    &    784 &   1055 &   1839 \\
+unlabeled train set (5.0\textbackslash \%)  &  14905 &  20046 &  34951 \\
+test set (5.0\textbackslash \%)             &   6724 &   9044 &  15768 \\
+\bottomrule
+\end{tabular}

@@ -1,9 +1,0 @@
-\begin{tabular}{lrr}
-\toprule
- & clean & toxic \\
-\midrule
-RandomForestClassifier (0.8%) & 89.78 & 89.78 \\
-RandomForestClassifier (0.9%) & 87.14 & 87.14 \\
-RandomForestClassifier (0.95%) & 85.63 & 85.63 \\
-\bottomrule
-\end{tabular}

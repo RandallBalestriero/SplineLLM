@@ -1,0 +1,8 @@
+\begin{tabular}{lrrrrrrr}
+\toprule
+{} &  DM Math. &  FreeLaw &  Github &  PubMed &  USPTO &  dollyQA &  jigsaw\_clean \\
+\midrule
+RandomForest       &    100.00 &    99.94 &   99.57 &   99.87 &  99.64 &    98.93 &         98.85 \\
+LogisticRegression &    100.00 &    99.85 &   99.57 &   99.92 &  99.92 &    99.47 &         99.41 \\
+\bottomrule
+\end{tabular}

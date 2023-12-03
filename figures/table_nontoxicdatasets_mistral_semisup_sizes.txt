@@ -1,0 +1,48 @@
+\begin{tabular}{lrrrrrrrr}
+\toprule
+{} &  DM Math. &  FreeLaw &  Github &  PubMed &  USPTO &  dollyQA &  jigsaw\_clean &   Total \\
+\midrule
+labeled train set (50.0\textbackslash \%)   &        74 &      196 &     725 &    1153 &    442 &     5254 &         70378 &   78222 \\
+unlabeled train set (50.0\textbackslash \%) &        74 &      197 &     725 &    1153 &    442 &     5254 &         70378 &   78223 \\
+test set (50.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (40.0\textbackslash \%)   &        59 &      157 &     580 &     922 &    354 &     4203 &         56303 &   62578 \\
+unlabeled train set (40.0\textbackslash \%) &        89 &      236 &     870 &    1384 &    530 &     6305 &         84453 &   93867 \\
+test set (40.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (30.0\textbackslash \%)   &        45 &      118 &     435 &     692 &    265 &     3152 &         42226 &   46933 \\
+unlabeled train set (30.0\textbackslash \%) &       103 &      275 &    1015 &    1614 &    619 &     7356 &         98530 &  109512 \\
+test set (30.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (20.0\textbackslash \%)   &        30 &       79 &     290 &     461 &    177 &     2101 &         28151 &   31289 \\
+unlabeled train set (20.0\textbackslash \%) &       118 &      314 &    1160 &    1845 &    707 &     8407 &        112605 &  125156 \\
+test set (20.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (10.0\textbackslash \%)   &        15 &       39 &     145 &     231 &     88 &     1051 &         14075 &   15644 \\
+unlabeled train set (10.0\textbackslash \%) &       133 &      354 &    1305 &    2075 &    796 &     9457 &        126681 &  140801 \\
+test set (10.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (5.0\textbackslash \%)    &         7 &       20 &      73 &     115 &     44 &      525 &          7038 &    7822 \\
+unlabeled train set (5.0\textbackslash \%)  &       141 &      373 &    1377 &    2191 &    840 &     9983 &        133718 &  148623 \\
+test set (5.0\textbackslash \%)             &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (1.0\textbackslash \%)    &         1 &        4 &      15 &      23 &      9 &      105 &          1407 &    1564 \\
+unlabeled train set (1.0\textbackslash \%)  &       147 &      389 &    1435 &    2283 &    875 &    10403 &        139349 &  154881 \\
+test set (1.0\textbackslash \%)             &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (50.0\textbackslash \%)   &        74 &      196 &     725 &    1153 &    442 &     5254 &         70378 &   78222 \\
+unlabeled train set (50.0\textbackslash \%) &        74 &      197 &     725 &    1153 &    442 &     5254 &         70378 &   78223 \\
+test set (50.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (40.0\textbackslash \%)   &        59 &      157 &     580 &     922 &    354 &     4203 &         56303 &   62578 \\
+unlabeled train set (40.0\textbackslash \%) &        89 &      236 &     870 &    1384 &    530 &     6305 &         84453 &   93867 \\
+test set (40.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (30.0\textbackslash \%)   &        45 &      118 &     435 &     692 &    265 &     3152 &         42226 &   46933 \\
+unlabeled train set (30.0\textbackslash \%) &       103 &      275 &    1015 &    1614 &    619 &     7356 &         98530 &  109512 \\
+test set (30.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (20.0\textbackslash \%)   &        30 &       79 &     290 &     461 &    177 &     2101 &         28151 &   31289 \\
+unlabeled train set (20.0\textbackslash \%) &       118 &      314 &    1160 &    1845 &    707 &     8407 &        112605 &  125156 \\
+test set (20.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (10.0\textbackslash \%)   &        15 &       39 &     145 &     231 &     88 &     1051 &         14075 &   15644 \\
+unlabeled train set (10.0\textbackslash \%) &       133 &      354 &    1305 &    2075 &    796 &     9457 &        126681 &  140801 \\
+test set (10.0\textbackslash \%)            &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (5.0\textbackslash \%)    &         7 &       20 &      73 &     115 &     44 &      525 &          7038 &    7822 \\
+unlabeled train set (5.0\textbackslash \%)  &       141 &      373 &    1377 &    2191 &    840 &     9983 &        133718 &  148623 \\
+test set (5.0\textbackslash \%)             &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+labeled train set (1.0\textbackslash \%)    &         1 &        4 &      15 &      23 &      9 &      105 &          1407 &    1564 \\
+unlabeled train set (1.0\textbackslash \%)  &       147 &      389 &    1435 &    2283 &    875 &    10403 &        139349 &  154881 \\
+test set (1.0\textbackslash \%)             &        63 &      169 &     621 &     989 &    379 &     4503 &         60325 &   67049 \\
+\bottomrule
+\end{tabular}

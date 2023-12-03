@@ -1,0 +1,12 @@
+\begin{tabular}{lrr}
+\toprule
+{} &  clean &  toxic \\
+\midrule
+RandomForestClassifier (20.0\textbackslash \%) &  87.83 &  87.83 \\
+RandomForestClassifier (10.0\textbackslash \%) &  85.98 &  85.98 \\
+RandomForestClassifier (5.0\textbackslash \%)  &  84.10 &  84.10 \\
+LogisticRegression (20.0\textbackslash \%)     &  97.87 &  97.87 \\
+LogisticRegression (10.0\textbackslash \%)     &  97.32 &  97.32 \\
+LogisticRegression (5.0\textbackslash \%)      &  96.36 &  96.36 \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,8 @@
+\begin{tabular}{lrr}
+\toprule
+{} &  clean &  toxic \\
+\midrule
+RandomForest       &  89.15 &  89.15 \\
+LogisticRegression &  89.80 &  89.80 \\
+\bottomrule
+\end{tabular}
