@@ -5,6 +5,8 @@ from transformers import AutoTokenizer
 from tqdm import tqdm
 import numpy as np
 import torch 
+from statistic_analysis import load_data
+from typing import  Tuple, List
 
 def get_dataset(data_name):
     if 'toxicity' in data_name:
@@ -69,7 +71,23 @@ def load_pile(meta_data):
                 lambda example: example["meta"]["pile_set_name"] == meta_data)
     return raw_dataset['text']
 
+def get_toxic_clean_data_benchmarch() -> Tuple[List[str], List[str]]:
+    
+    data_names_clean = ['DM Mathematics', 'dollyQA', 'FreeLaw', 'Github', 'USPTO Backgrounds']
+    data_names_toxic = ['toxicity', 'toxic_pile']
+    
+    
+    
+    jigsaw_path = "/home/ubuntu/polytope/full_jigsaw/statistics.csv"
+    _, clean_data = load_data(jigsaw_path, jigsaw_subset= "clean")
+    _, toxic_data = load_data(jigsaw_path, jigsaw_subset= "toxic")
 
+    for name in data_names_clean:
+        clean_data += list(pd.read_csv(f"/home/ubuntu/polytope/{name}/statistics.csv")['prompt'].values)
+    for name in data_names_toxic:
+        toxic_data += list(get_dataset(f"/home/ubuntu/polytope/{name}/statistics.csv")['prompt'].values)
+
+    return clean_data, toxic_data
 
 
 def mix_pile_toxic():
