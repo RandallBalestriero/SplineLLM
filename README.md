@@ -2,6 +2,13 @@
 
 The codebase allows to reproduce our figures and tables. 
 
+| Model | Toxicity detection AUC | Latency |
+| ----- | ------- | ---------------------- |
+|Spline-Llama2-7B (linear) | 99.18 | 0.061s|
+|Spline-Llama2-7B (3 layers, RF) | 94.68 | 0.005s|
+|Spline-Mistral-7B (linear) | 98.45 | 0.066s |
+|Spline-Mistral-7B (3 layers, RF) |  93.73 | 0.006s|
+
 We encourage reproducibility and hope that any issue that may arise in the process will be raised in this repository to ensure that the codebase is stable and useful to everyone.
 
 ## Spline features extraction
