@@ -9,7 +9,7 @@ from collections import defaultdict
 torch.set_grad_enabled(False)
 
 if __name__ == "__main__":
-    category = "asian_2"
+    category = "asian" # "muslim" "trans" "woman"
     dataset_file_path = f"/home/ubuntu/polytope/toxicity_id_eval/{category}.csv"
     raw_dataset = datasets.load_dataset(
         "csv", data_files=dataset_file_path, split="train"
