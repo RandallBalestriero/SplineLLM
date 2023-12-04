@@ -428,7 +428,7 @@ if __name__ == "__main__":
             "USPTO": f"../Downloads/polytope_{backbone}/USPTO Backgrounds/statistics.csv",
             "Github": f"../Downloads/polytope_{backbone}/Github/statistics.csv",
             "dollyQA": f"../Downloads/polytope_{backbone}/dollyQA/statistics.csv",
-            "jigsaw_clean": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
+            # "jigsaw_clean": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
         }
         X = []
         y = []
@@ -443,13 +443,13 @@ if __name__ == "__main__":
         X = np.concatenate(X)
         y = np.concatenate(y)
 
-        run_sup_semisup_experiments(
-            X,
-            y,
-            exp_name=f"nontoxicdatasets_{backbone}",
-            n_folds=n_folds,
-            pcts=[0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99],
-        )
+        # run_sup_semisup_experiments(
+        #     X,
+        #     y,
+        #     exp_name=f"nontoxicdatasets_{backbone}",
+        #     n_folds=n_folds,
+        #     pcts=[0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99],
+        # )
         unsupervised_embedding(
             np.reshape(X, (len(X), -1)), y, exp_name=f"nontoxicdatasets_{backbone}"
         )
