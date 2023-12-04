@@ -1,13 +1,29 @@
-# Code repository for the paper *Characterizing Large Language Model Geometry Solves Toxicity Detection and Generation*
+# Code repository for the paper **Characterizing Large Language Model Geometry Solves Toxicity Detection and Generation**
 
 The codebase allows to reproduce our figures and tables. 
 
-| Model | Toxicity detection AUC | Latency |
-| ----- | ------- | ---------------------- |
-|Spline-Llama2-7B (linear) | 99.18 | 0.061s|
-|Spline-Llama2-7B (3 layers, RF) | 94.68 | 0.005s|
-|Spline-Mistral-7B (linear) | 98.45 | 0.066s |
-|Spline-Mistral-7B (3 layers, RF) |  93.73 | 0.006s|
+
+*To provide a practical and principled answer, we propose to characterize LLMs from a geometric perspective. We obtain in closed form (i) the intrinsic dimension in which the Multi-Head Attention embeddings are constrained to exist and (ii) the partition and per-region affine mappings of the per-layer feedforward networks. Our results are informative, do not rely on approximations, and are actionable. First, we show that, motivated by our geometric interpretation, we can break Llama$2$'s RLHF by controlling its embedding's intrinsic dimension through informed prompt manipulation. Second, we derive $7$ interpretable spline features that can be extracted from any (pre-trained) LLM layer, providing a rich abstract representation of their inputs. Those features alone ($224$ for Mistral-7B and Llama$2$-7B) are sufficient to help solve toxicity detection, infer the domain of the prompt, and even solve the Jigsaw challenge, which aims to characterize the type of toxicity of various prompts. Our results demonstrate how, even in large-scale regimes, exact theoretical results can answer practical questions in language models.*
+
+
+- Our study enables toxicity detection from pre-trained LLM using only 224 extracted features:
+
+    | Model | Toxicity detection AUC | Latency |
+    | ----- | ------- | ---------------------- |
+    |Spline-Llama2-7B (linear) | 99.18 | 0.061s|
+    |Spline-Llama2-7B (3 layers, RF) | 94.68 | 0.005s|
+    |Spline-Mistral-7B (linear) | 98.45 | 0.066s |
+    |Spline-Mistral-7B (3 layers, RF) |  93.73 | 0.006s|
+- Domain separation, again using 224 extracted features:
+
+    | Model |classifier| DM Math. | FreeLaw | Github | PubMed | USPTO | dollyQA | jigsaw(clean) |
+    | --   | ---| ---       | ---     | ---   | ---    | ---   | --- | --- |
+    |Spline-Mistral-7B|RandomForest | 100.00 | 99.77 | 99.24 | 99.37 | 98.25 | 97.73 | 94.62 |
+    | Spline-Mistral-7B|LogisticRegression | 100.00 | 99.82 | 99.76 | 99.86 | 99.79 | 99.14 | 98.68 |
+    |Spline-Mistral-7B|LogisticRegression (1\% labels) | 99.97 | 99.25 | 98.09 | 97.47 | 94.83 | 94.45 | 89.87 |
+    |Spline-Llama2-7B| RandomForest | 99.98 | 99.86 | 99.29 | 99.73 | 98.89 | 98.88 | 97.63 |
+    |Spline-Llama2-7B|LogisticRegression | 100.00 | 99.87 | 99.76 | 99.92 | 99.92 | 99.63 | 99.33 |
+    |Spline-Llama2-7B|LogisticRegression (1\% labels) | 99.31 | 99.60 | 98.60 | 99.32 | 98.21 | 98.18 | 96.11 |
 
 We encourage reproducibility and hope that any issue that may arise in the process will be raised in this repository to ensure that the codebase is stable and useful to everyone.
 
