@@ -37,7 +37,11 @@ The procedure to extract our proposed spline features is as follows:
 
 ## Intrinsic dimension experiment
 
-ToDo
+Run `ID_estimation.py` to obtain the ID corresponding to each layer in the LLM. The default setting uses prompts corresponding to `asian` category. 
+- `modeling_llama.py` is updated to return ID in place of the attention values. For different ID estimators the code to update is ![here](https://github.com/RandallBalestriero/SplineLLM/blob/8c8fa8513ac7f38636b607a4cfa5ec3f163fd394/modeling_llama.py#L530C13-L533C21)  
+- To run for prompts corresponding to other category, update the ![code](https://github.com/RandallBalestriero/SplineLLM/blob/6c3df4a73bc7e67757ddfcbc49a48c7b71b7d94c/ID_estimation.py#L12) to appropriate category.
+- The code to recreate Fig. 2 and Fig. 10 is included in folder `toxicity_id_eval`.
+
 
 
 ## Generating the figures
