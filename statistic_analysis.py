@@ -414,10 +414,8 @@ if __name__ == "__main__":
     rc("axes", labelsize=18)
 
     # compare_huggingface_classifiers()
-    # asdf
     # solve_jigsaw("mistral", 3)
     # solve_jigsaw("llama7b", 3)
-    # asdf
 
     n_folds = 5
     for backbone in ["mistral", "llama7b"]:
@@ -573,6 +571,7 @@ if __name__ == "__main__":
     #     y,
     #     exp_name=f"toxicseparation_withjigsawclean_{backbone}",
     # )
+
     # Clustering results
     # fig, axs = plt.subplots(1, 2)
     # scores = clustering(

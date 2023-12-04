@@ -8,7 +8,7 @@ sbn.set_context(font_scale=2)
 plt.rcParams["font.size"] = 22
 
 
-category = "asian"  # "asian"  #  muslim
+category = "asian"  # "asian"  #  muslim #trans
 dataset_file_path = f"{category}.csv"
 
 df = pd.read_csv(dataset_file_path)
@@ -63,13 +63,13 @@ def plot_text(ax, idx, text_x, text_y, color, max_width=700):
     )
     txt._get_wrap_line_width = lambda: max_width
     bbox = txt.get_window_extent().transformed(ax.transData.inverted())
-    # plt.plot(
-    #     [df2["Context Length"].iloc[idx], bbox.x0],
-    #     [df2["Intrinsic Dimension"].iloc[idx], bbox.y0],
-    #     color="gray",
-    #     linewidth=3,
-    #     linestyle="--",
-    # )
+    plt.plot(
+        [df2["Context Length"].iloc[idx], bbox.x0],
+        [df2["Intrinsic Dimension"].iloc[idx], bbox.y0],
+        color="gray",
+        linewidth=3,
+        linestyle="--",
+    )
 
 
 plot_text(
@@ -91,53 +91,9 @@ plot_text(
 )
 
 plt.subplots_adjust(0.1, 0.1, 0.96, 0.99)
-# plt.tight_layout()
-# plt.show()
 plt.savefig(f"{category}.png")
 plt.close()
 pd.set_option("display.max_colwidth", None)
 df2 = df2.drop("Prepended", axis=1).drop("ID", axis=1)
 
 print(str(df2.to_latex(index=False)))
-
-# fig, ax = plt.subplots(1, 1, figsize=(14, 20))
-# print(df2)
-
-# ax = sbn.lineplot(
-#     data=df2,
-#     x="Context Length",
-#     y="Intrinsic Dimension",
-#     hue="Label",
-#     marker="o",
-#     markersize=12,
-#     errorbar=None,
-#     linewidth=3,
-#     palette=["tab:blue", "tab:red"],
-# )
-
-# for count, i in enumerate(np.flatnonzero((df2["Label"] != "Toxic Generation").values)):
-#     plot_text(
-#         ax,
-#         i,
-#         0,
-#         -180 * (count + 1),
-#         "tab:green",
-#         800,
-#     )
-
-# for count, i in enumerate(np.flatnonzero((df2["Label"] == "Toxic Generation").values)):
-#     plot_text(
-#         ax,
-#         i,
-#         420,
-#         -280 * (count + 1),
-#         "tab:red",
-#         800,
-#     )
-
-# plt.xlim(0, 600)
-# plt.ylim(0, -80 * (i + 1))
-# # plt.subplots_adjust(0.1, 0.1, 0.96, 0.99)
-# # plt.tight_layout()
-# # plt.show()
-# plt.savefig(f"{category}_full.png")
