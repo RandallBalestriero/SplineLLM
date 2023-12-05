@@ -46,7 +46,7 @@ Run `ID_estimation.py` to obtain the ID corresponding to each layer in the LLM. 
 
 ## Generating the figures
 
-- all the figures about T-SNE, table of results, semi-supervised learning, and ablation (looking at peformance of our features per-layer) are provided in the `statistic_analysis.py` file. In there, you will find a few utilities such as:
+- all the figures about T-SNE, table of results, semi-supervised learning, and ablation (looking at performance of our features per-layer) are provided in the `statistic_analysis.py` file. In there, you will find a few utilities such as:
   -  `unsupervised_embedding` used to obtain the T-SNE
   - `solve_jigsaw` to solve the jigsaw challenge
   - `run_sup_semisup_experiments` for the supervised (and semi-supervised) experiments
