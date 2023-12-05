@@ -82,7 +82,19 @@ def clustering(data, labels, method, by=None):
     return scores
 
 
-def fit_sup(data, labels, model, by=None, n_folds=5, pct_unlabeled=0, test_size=0.3):
+def fit_sup(
+    data,
+    labels,
+    model,
+    by=None,
+    n_folds=5,
+    pct_unlabeled=0,
+    test_size=0.3,
+    test_data=None,
+    test_labels=None,
+):
+    if test_data is not None:
+        n_folds = 1
     multioutput = len(labels.shape) > 1 and labels.shape[1] > 1
     if not multioutput:
         encoder = LabelEncoder()
@@ -96,14 +108,23 @@ def fit_sup(data, labels, model, by=None, n_folds=5, pct_unlabeled=0, test_size=
             model = MultiOutputClassifier(model)
     if by == None:
         chunks = [data.reshape((len(data), -1))]
+        if test_data is not None:
+            test_chunks = [test_data.reshape((len(test_data), -1))]
         index = ["all"]
     elif by == "layer":
         chunks = [data[:, i] for i in range(data.shape[1])]
+        if test_data is not None:
+            test_chunks = [test_data[:, i] for i in range(test_data.shape[1])]
         index = [f"layer {1+i}" for i in range(data.shape[1])]
     elif by == "layer_progressive":
         chunks = [
             data[:, : i + 1].reshape((len(data), -1)) for i in range(data.shape[1])
         ]
+        if test_data is not None:
+            test_chunks = [
+                test_data[:, : i + 1].reshape((len(test_data), -1))
+                for i in range(test_data.shape[1])
+            ]
         index = [f"layer 1->{1+i}" for i in range(data.shape[1])]
     elif by == "feature":
         chunks = [data[:, :, i] for i in range(data.shape[2])]
@@ -131,9 +152,15 @@ def fit_sup(data, labels, model, by=None, n_folds=5, pct_unlabeled=0, test_size=
         for fold in range(n_folds):
             print(f"\t\t{fold=}")
             stratify = y if not multioutput else None
-            X_train, X_test, y_train, y_test = train_test_split(
-                chunk, y, test_size=test_size, random_state=fold, stratify=stratify
-            )
+            if test_data is None:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    chunk, y, test_size=test_size, random_state=fold, stratify=stratify
+                )
+            else:
+                X_train = chunk
+                X_test = test_chunks[c]
+                y_train = y
+                y_test = test_labels
             X_train = scaler.fit_transform(X_train)
             X_test = scaler.transform(X_test)
             # perform fitting and prediction
@@ -211,7 +238,7 @@ def unsupervised_embedding(X, y, exp_name):
             lh.set_alpha(1)
         ax.set_axis_off()
         plt.tight_layout()
-        plt.savefig(f"./figures/{exp_name}_{name}.png")
+        plt.savefig(f"./figures/{exp_name}_{name}.png", dpi=300)
         plt.close()
 
 
@@ -326,34 +353,87 @@ def solve_jigsaw(backbone, n_folds):
         f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv"
     )
     y = raw_data[columns].values
+    test_labels = pd.read_csv("../Downloads/jigsaw_testset/testset_jigsaw_labels.csv")
+    test_labels.drop("id", axis=1, inplace=True)
+    test_labels = test_labels.values
+    test_data = pd.read_csv("../Downloads/jigsaw_testset/statistics.csv")
+    test_data = np.stack(test_data["stats"].apply(ast.literal_eval).values)
+    test_data = test_data.reshape((len(test_data), -1))
+    test_data = test_data[(test_labels != -1).all(1)]
+    test_labels = test_labels[(test_labels != -1).all(1)]
+
+    print(test_data, test_labels)
+    print(test_data.shape, test_labels.shape)
+
     X = np.stack(raw_data["stats"].apply(ast.literal_eval).values)
     X = X.reshape((len(X), -1))
+
+    print(X.std(0), test_data.std(0))
+
     model = LogisticRegression(
         class_weight="balanced", n_jobs=-1, max_iter=500, random_state=0
     )
+
+    model = RandomForestClassifier(
+        class_weight="balanced",
+        n_jobs=-1,
+        min_samples_leaf=100,
+        n_estimators=300,
+    )
     df1, _ = fit_sup(
-        X, y, model=model, n_folds=n_folds, pct_unlabeled=0.98, test_size=0.2
+        X,
+        y,
+        model=model,
+        n_folds=n_folds,
+        pct_unlabeled=0.98,
+        test_size=0.2,
+        test_data=test_data,
+        test_labels=test_labels,
     )
     df1.columns = columns
     df1.index = ["2% labels"]
     df2, _ = fit_sup(
-        X, y, model=model, n_folds=n_folds, pct_unlabeled=0.95, test_size=0.2
+        X,
+        y,
+        model=model,
+        n_folds=n_folds,
+        pct_unlabeled=0.95,
+        test_size=0.2,
+        test_data=test_data,
+        test_labels=test_labels,
     )
     df2.columns = columns
     df2.index = ["5% labels"]
     df3, _ = fit_sup(
-        X, y, model=model, n_folds=n_folds, pct_unlabeled=0.9, test_size=0.2
+        X,
+        y,
+        model=model,
+        n_folds=n_folds,
+        pct_unlabeled=0.9,
+        test_size=0.2,
+        test_data=test_data,
+        test_labels=test_labels,
     )
     df3.columns = columns
     df3.index = ["10% labels"]
     df4, _ = fit_sup(
-        X, y, model=model, n_folds=n_folds, pct_unlabeled=0.0, test_size=0.2
+        X,
+        y,
+        model=model,
+        n_folds=n_folds,
+        pct_unlabeled=0.0,
+        test_size=0.2,
+        test_data=test_data,
+        test_labels=test_labels,
     )
+    print(df4)
     df4.columns = columns
     df4.index = ["100% labels"]
     df = pd.concat([df1, df2, df3, df4])
     df["avg."] = df.mean(1)
-    with open(f"./figures/table_{backbone}_jigsaw_acc.txt", "w") as f:
+    with open(
+        f"./figures/table_{type(model).__name__}_{backbone}_jigsaw_acc.txt", "w"
+    ) as f:
         f.write(str(df.to_latex(float_format="{:.2f}".format)))
 
 
@@ -413,9 +493,9 @@ if __name__ == "__main__":
     rc("font", size=16)
     rc("axes", labelsize=18)
 
-    # compare_huggingface_classifiers()
-    # solve_jigsaw("mistral", 3)
-    # solve_jigsaw("llama7b", 3)
+    compare_huggingface_classifiers()
+    solve_jigsaw("mistral", 3)
+    solve_jigsaw("llama7b", 3)
 
     n_folds = 5
     for backbone in ["mistral", "llama7b"]:
@@ -441,136 +521,136 @@ if __name__ == "__main__":
         X = np.concatenate(X)
         y = np.concatenate(y)
 
-        # run_sup_semisup_experiments(
-        #     X,
-        #     y,
-        #     exp_name=f"nontoxicdatasets_{backbone}",
-        #     n_folds=n_folds,
-        #     pcts=[0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99],
-        # )
+        run_sup_semisup_experiments(
+            X,
+            y,
+            exp_name=f"nontoxicdatasets_{backbone}",
+            n_folds=n_folds,
+            pcts=[0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99],
+        )
         unsupervised_embedding(
             np.reshape(X, (len(X), -1)), y, exp_name=f"nontoxicdatasets_{backbone}"
         )
 
-    # datasets = {
-    #     "toxic_pile": f"../Downloads/polytope_{backbone}/toxic_pile/statistics.csv",
-    #     "toxigen": f"../Downloads/polytope_{backbone}/toxicity/statistics.csv",
-    #     "FreeLaw": f"../Downloads/polytope_{backbone}/FreeLaw/statistics.csv",
-    #     "PubMed": f"../Downloads/polytope_{backbone}/PubMed Abstracts/statistics.csv",
-    #     "DM Math.": f"../Downloads/polytope_{backbone}/DM Mathematics/statistics.csv",
-    #     "USPTO": f"../Downloads/polytope_{backbone}/USPTO Backgrounds/statistics.csv",
-    #     "dollyQA": f"../Downloads/polytope_{backbone}/dollyQA/statistics.csv",
-    #     "Github": f"../Downloads/polytope_{backbone}/Github/statistics.csv",
-    #     "jigsaw_toxic": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
-    # }
-    # X = []
-    # y = []
-    # prompts = []
-    # pbar = tqdm(datasets.items(), total=len(datasets))
-    # for name, path in pbar:
-    #     pbar.set_description(f"Loading {name} from {path}")
-    #     if "jigsaw_clean" == name:
-    #         X_, prompts_ = load_data(path, jigsaw_subset="clean")
-    #     elif "jigsaw_toxic" == name:
-    #         X_, prompts_ = load_data(path, jigsaw_subset="toxic")
-    #     elif "jigsaw_very_toxic" == name:
-    #         X_, prompts_ = load_data(path, jigsaw_subset="very_toxic")
-    #     else:
-    #         X_, prompts_ = load_data(path)
-    #     y.append(
-    #         np.asarray(
-    #             [
-    #                 "toxic"
-    #                 if name
-    #                 in [
-    #                     "toxigen",
-    #                     "toxic_pile",
-    #                     "jigsaw_toxic",
-    #                     "jigsaw_very_toxic",
-    #                 ]
-    #                 else "clean"
-    #             ]
-    #             * len(X_)
-    #         )
-    #     )
-    #     prompts.extend(prompts_)
-    #     X.append(X_)
-    #     print(X_.shape, y[-1].shape)
-    # X = np.concatenate(X)
-    # y = np.concatenate(y)
+        datasets = {
+            "toxic_pile": f"../Downloads/polytope_{backbone}/toxic_pile/statistics.csv",
+            "toxigen": f"../Downloads/polytope_{backbone}/toxicity/statistics.csv",
+            "FreeLaw": f"../Downloads/polytope_{backbone}/FreeLaw/statistics.csv",
+            "PubMed": f"../Downloads/polytope_{backbone}/PubMed Abstracts/statistics.csv",
+            "DM Math.": f"../Downloads/polytope_{backbone}/DM Mathematics/statistics.csv",
+            "USPTO": f"../Downloads/polytope_{backbone}/USPTO Backgrounds/statistics.csv",
+            "dollyQA": f"../Downloads/polytope_{backbone}/dollyQA/statistics.csv",
+            "Github": f"../Downloads/polytope_{backbone}/Github/statistics.csv",
+            "jigsaw_toxic": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
+        }
+        X = []
+        y = []
+        prompts = []
+        pbar = tqdm(datasets.items(), total=len(datasets))
+        for name, path in pbar:
+            pbar.set_description(f"Loading {name} from {path}")
+            if "jigsaw_clean" == name:
+                X_, prompts_ = load_data(path, jigsaw_subset="clean")
+            elif "jigsaw_toxic" == name:
+                X_, prompts_ = load_data(path, jigsaw_subset="toxic")
+            elif "jigsaw_very_toxic" == name:
+                X_, prompts_ = load_data(path, jigsaw_subset="very_toxic")
+            else:
+                X_, prompts_ = load_data(path)
+            y.append(
+                np.asarray(
+                    [
+                        "toxic"
+                        if name
+                        in [
+                            "toxigen",
+                            "toxic_pile",
+                            "jigsaw_toxic",
+                            "jigsaw_very_toxic",
+                        ]
+                        else "clean"
+                    ]
+                    * len(X_)
+                )
+            )
+            prompts.extend(prompts_)
+            X.append(X_)
+            print(X_.shape, y[-1].shape)
+        X = np.concatenate(X)
+        y = np.concatenate(y)
 
-    # run_sup_semisup_experiments(
-    #     X,
-    #     y,
-    #     exp_name=f"toxicseparation_nojigsawclean_{backbone}",
-    #     n_folds=n_folds,
-    #     pcts=[0.8, 0.9, 0.95],
-    # )
-    # unsupervised_embedding(
-    #     np.reshape(X, (len(X), -1)),
-    #     y,
-    #     exp_name=f"toxicseparation_nojigsawclean_{backbone}",
-    # )
+        run_sup_semisup_experiments(
+            X,
+            y,
+            exp_name=f"toxicseparation_nojigsawclean_{backbone}",
+            n_folds=n_folds,
+            pcts=[0.8, 0.9, 0.95],
+        )
+        unsupervised_embedding(
+            np.reshape(X, (len(X), -1)),
+            y,
+            exp_name=f"toxicseparation_nojigsawclean_{backbone}",
+        )
 
-    # datasets = {
-    #     "toxic_pile": f"../Downloads/polytope_{backbone}/toxic_pile/statistics.csv",
-    #     "toxigen": f"../Downloads/polytope_{backbone}/toxicity/statistics.csv",
-    #     "FreeLaw": f"../Downloads/polytope_{backbone}/FreeLaw/statistics.csv",
-    #     "PubMed": f"../Downloads/polytope_{backbone}/PubMed Abstracts/statistics.csv",
-    #     "DM Math.": f"../Downloads/polytope_{backbone}/DM Mathematics/statistics.csv",
-    #     "USPTO": f"../Downloads/polytope_{backbone}/USPTO Backgrounds/statistics.csv",
-    #     "dollyQA": f"../Downloads/polytope_{backbone}/dollyQA/statistics.csv",
-    #     "Github": f"../Downloads/polytope_{backbone}/Github/statistics.csv",
-    #     "jigsaw_clean": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
-    #     "jigsaw_toxic": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
-    # }
-    # X = []
-    # y = []
-    # prompts = []
-    # pbar = tqdm(datasets.items(), total=len(datasets))
-    # for name, path in pbar:
-    #     pbar.set_description(f"Loading {name} from {path}")
-    #     if "jigsaw_clean" == name:
-    #         X_, prompts_ = load_data(path, jigsaw_subset="clean")
-    #     elif "jigsaw_toxic" == name:
-    #         X_, prompts_ = load_data(path, jigsaw_subset="toxic")
-    #     elif "jigsaw_very_toxic" == name:
-    #         X_, prompts_ = load_data(path, jigsaw_subset="very_toxic")
-    #     else:
-    #         X_, prompts_ = load_data(path)
-    #     y.append(
-    #         np.asarray(
-    #             [
-    #                 "toxic"
-    #                 if name
-    #                 in [
-    #                     "toxigen",
-    #                     "toxic_pile",
-    #                     "jigsaw_toxic",
-    #                     "jigsaw_very_toxic",
-    #                 ]
-    #                 else "clean"
-    #             ]
-    #             * len(X_)
-    #         )
-    #     )
-    #     prompts.extend(prompts_)
-    #     X.append(X_)
-    # X = np.concatenate(X)
-    # y = np.concatenate(y)
+        datasets = {
+            "toxic_pile": f"../Downloads/polytope_{backbone}/toxic_pile/statistics.csv",
+            "toxigen": f"../Downloads/polytope_{backbone}/toxicity/statistics.csv",
+            "FreeLaw": f"../Downloads/polytope_{backbone}/FreeLaw/statistics.csv",
+            "PubMed": f"../Downloads/polytope_{backbone}/PubMed Abstracts/statistics.csv",
+            "DM Math.": f"../Downloads/polytope_{backbone}/DM Mathematics/statistics.csv",
+            "USPTO": f"../Downloads/polytope_{backbone}/USPTO Backgrounds/statistics.csv",
+            "dollyQA": f"../Downloads/polytope_{backbone}/dollyQA/statistics.csv",
+            "Github": f"../Downloads/polytope_{backbone}/Github/statistics.csv",
+            "jigsaw_clean": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
+            "jigsaw_toxic": f"../Downloads/polytope_{backbone}/full_jigsaw/statistics.csv",
+        }
+        X = []
+        y = []
+        prompts = []
+        pbar = tqdm(datasets.items(), total=len(datasets))
+        for name, path in pbar:
+            pbar.set_description(f"Loading {name} from {path}")
+            if "jigsaw_clean" == name:
+                X_, prompts_ = load_data(path, jigsaw_subset="clean")
+            elif "jigsaw_toxic" == name:
+                X_, prompts_ = load_data(path, jigsaw_subset="toxic")
+            elif "jigsaw_very_toxic" == name:
+                X_, prompts_ = load_data(path, jigsaw_subset="very_toxic")
+            else:
+                X_, prompts_ = load_data(path)
+            y.append(
+                np.asarray(
+                    [
+                        "toxic"
+                        if name
+                        in [
+                            "toxigen",
+                            "toxic_pile",
+                            "jigsaw_toxic",
+                            "jigsaw_very_toxic",
+                        ]
+                        else "clean"
+                    ]
+                    * len(X_)
+                )
+            )
+            prompts.extend(prompts_)
+            X.append(X_)
+        X = np.concatenate(X)
+        y = np.concatenate(y)
 
-    # run_sup_semisup_experiments(
-    #     X,
-    #     y,
-    #     exp_name=f"toxicseparation_withjigsawclean_{backbone}",
-    #     n_folds=n_folds,
-    #     pcts=[0.8, 0.9, 0.95],
-    # )
-    # unsupervised_embedding(
-    #     np.reshape(X, (len(X), -1)),
-    #     y,
-    #     exp_name=f"toxicseparation_withjigsawclean_{backbone}",
-    # )
+        run_sup_semisup_experiments(
+            X,
+            y,
+            exp_name=f"toxicseparation_withjigsawclean_{backbone}",
+            n_folds=n_folds,
+            pcts=[0.8, 0.9, 0.95],
+        )
+        unsupervised_embedding(
+            np.reshape(X, (len(X), -1)),
+            y,
+            exp_name=f"toxicseparation_withjigsawclean_{backbone}",
+        )
 
     # Clustering results
     # fig, axs = plt.subplots(1, 2)

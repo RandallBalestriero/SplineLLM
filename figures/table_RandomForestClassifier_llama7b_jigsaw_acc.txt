@@ -1,0 +1,10 @@
+\begin{tabular}{lrrrrrrr}
+\toprule
+{} &  toxic &  severe\_toxic &  obscene &  threat &  insult &  identity\_hate &  avg. \\
+\midrule
+2\% labels   &  72.39 &         79.63 &    73.68 &   79.78 &   73.54 &          74.16 & 75.53 \\
+5\% labels   &  73.61 &         84.79 &    74.82 &   82.02 &   74.58 &          78.00 & 77.97 \\
+10\% labels  &  75.18 &         86.97 &    76.57 &   83.11 &   76.15 &          81.15 & 79.86 \\
+100\% labels &  87.02 &         97.34 &    89.89 &   98.77 &   89.70 &          95.61 & 93.06 \\
+\bottomrule
+\end{tabular}
