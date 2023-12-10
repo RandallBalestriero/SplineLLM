@@ -18,7 +18,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import (
@@ -27,6 +27,7 @@ from sklearn.metrics import (
     adjusted_rand_score,
     normalized_mutual_info_score,
     roc_auc_score,
+    auc,
     make_scorer,
 )
 from sklearn.preprocessing import StandardScaler
@@ -39,6 +40,8 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.model_selection import GridSearchCV
 import warnings
 import os
+from sklearn.model_selection import StratifiedKFold, KFold
+
 
 # Removes warnings in the current job
 warnings.filterwarnings("ignore")
@@ -347,6 +350,9 @@ def load_data(path: str, jigsaw_subset: str = "clean") -> Tuple[np.ndarray, List
 
 
 def solve_jigsaw(backbone, n_folds):
+    np.set_printoptions(precision=6)
+    import lightgbm as lgbm
+
     columns = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
     print("Loading csv")
     raw_data = pd.read_csv(
@@ -354,21 +360,95 @@ def solve_jigsaw(backbone, n_folds):
     )
     y = raw_data[columns].values
     test_labels = pd.read_csv("../Downloads/jigsaw_testset/testset_jigsaw_labels.csv")
+
     test_labels.drop("id", axis=1, inplace=True)
     test_labels = test_labels.values
-    test_data = pd.read_csv("../Downloads/jigsaw_testset/statistics.csv")
+    # test_data = pd.read_csv("../Downloads/jigsaw_testset/statistics.csv")
+    test_data = pd.read_csv(
+        f"../Downloads/polytope_{backbone}/jigsaw_testset/statistics.csv"
+    )
     test_data = np.stack(test_data["stats"].apply(ast.literal_eval).values)
     test_data = test_data.reshape((len(test_data), -1))
+    assert np.allclose((test_labels != -1).all(1), ~(test_labels == -1).any(1))
     test_data = test_data[(test_labels != -1).all(1)]
     test_labels = test_labels[(test_labels != -1).all(1)]
 
-    print(test_data, test_labels)
     print(test_data.shape, test_labels.shape)
 
     X = np.stack(raw_data["stats"].apply(ast.literal_eval).values)
     X = X.reshape((len(X), -1))
+    param = {
+        "objective": "binary",
+        "num_threads": 30,
+        "is_unbalance": True,
+        "verbosity": -1,
+        "seed": 0,
+        "boosting": "gbdt",
+    }
+    final_results = []
+    ensembler = Ridge(
+        alpha=1e-6,
+        fit_intercept=False,
+        positive=True,
+    )
+    skf = StratifiedKFold(n_splits=3, random_state=0, shuffle=True)
+    for i in range(6):
+        weights = []
+        print(f"Training for target dimension {i}")
+        print(f"\t Round 1: cross-validation and ensembling")
+        for train_index, test_index in skf.split(X, y[:, i]):
+            yhats = []
+            print(f"\t\tFold train len: {len(train_index)}, val len: {len(test_index)}")
+            train_data = lgbm.Dataset(X[train_index], y[train_index, i])
+            for num_iterations in [20, 150]:
+                for num_leaves in [128, 512]:
+                    for max_depth in [6, 14]:
+                        for lambda_l2 in [0, 0.001]:
+                            for min_data_in_leaf in [50, 200, 500]:
+                                param["lambda_l2"] = lambda_l2
+                                param["min_data_in_leaf"] = min_data_in_leaf
+                                param["num_iterations"] = num_iterations
+                                param["max_depth"] = max_depth
+                                param["num_leaves"] = num_leaves
+                                bst = lgbm.train(param, train_data)
+                                yhats.append(bst.predict(X[test_index]))
 
-    print(X.std(0), test_data.std(0))
+            yhats = np.stack(yhats, 1)
+            print(
+                "\t\tTraining set for ensembler:", yhats.shape, y[test_index, i].shape
+            )
+            ensembler.fit(yhats, y[test_index, i])
+            weights.append(ensembler.coef_.flatten())
+        weights = np.stack(weights, 0).mean(0)
+        weights /= weights.sum()
+        print(f"\t Round 2: full fit + ensembling")
+
+        preds = np.zeros(len(test_labels))
+        train_data = lgbm.Dataset(X, y[:, i])
+        counter = 0
+        for num_iterations in [20, 150]:
+            for num_leaves in [128, 512]:
+                for max_depth in [6, 14]:
+                    for lambda_l2 in [0, 0.001]:
+                        for min_data_in_leaf in [50, 200, 500]:
+                            param["lambda_l2"] = lambda_l2
+                            param["min_data_in_leaf"] = min_data_in_leaf
+                            param["num_iterations"] = num_iterations
+                            param["max_depth"] = max_depth
+                            param["num_leaves"] = num_leaves
+                            bst = lgbm.train(param, train_data)
+                            preds += weights[counter] * bst.predict(test_data)
+                            counter += 1
+
+        final_results.append(auc(test_labels[:, i], preds) * 100)
+        print(
+            "###################################################################################################"
+        )
+        print("FINAL", final_results, np.mean(final_results))
+        print(
+            "#############################################s######################################################"
+        )
+    asdf
 
     model = LogisticRegression(
         class_weight="balanced", n_jobs=-1, max_iter=500, random_state=0
@@ -493,9 +573,10 @@ if __name__ == "__main__":
     rc("font", size=16)
     rc("axes", labelsize=18)
 
-    compare_huggingface_classifiers()
-    solve_jigsaw("mistral", 3)
+    # compare_huggingface_classifiers()
+    # solve_jigsaw("mistral", 3)
     solve_jigsaw("llama7b", 3)
+    # solve_jigsaw("llama70B", 3)
 
     n_folds = 5
     for backbone in ["mistral", "llama7b"]:
